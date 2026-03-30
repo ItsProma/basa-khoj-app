@@ -18,6 +18,8 @@ export default function AddListingScreen({ onBack, userId }) {
   const [done, setDone] = useState(false);
   const [error, setError] = useState("");
 
+  const [uploadIdx, setUploadIdx] = useState(0);
+
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
   const toggleFeature = f => setForm(p => ({
     ...p,
@@ -34,11 +36,17 @@ export default function AddListingScreen({ onBack, userId }) {
     }));
   };
 
-  const removePhoto = i => setForm(p => ({
-    ...p,
-    photoFiles: p.photoFiles.filter((_, j) => j !== i),
-    photoPreviews: p.photoPreviews.filter((_, j) => j !== i),
-  }));
+  const removePhoto = i => {
+    // Revoke the URL to avoid memory leaks
+    if (form.photoPreviews[i].startsWith('blob:')) {
+      URL.revokeObjectURL(form.photoPreviews[i]);
+    }
+    setForm(p => ({
+      ...p,
+      photoFiles: p.photoFiles.filter((_, j) => j !== i),
+      photoPreviews: p.photoPreviews.filter((_, j) => j !== i),
+    }));
+  };
 
   const canNext = () => {
     if (step === 0) return form.title && form.area && form.rent && form.type && form.rooms;
@@ -47,21 +55,22 @@ export default function AddListingScreen({ onBack, userId }) {
   };
 
   const handleSubmit = async () => {
-    setLoading(true); setError("");
+    setLoading(true); 
+    setError("");
+    setUploadIdx(0);
+    
     try {
       await addListing({
-        title: form.title, area: form.area, address: form.address, floor: form.floor,
-        rent: Number(form.rent), type: form.type, rooms: Number(form.rooms),
-        bathrooms: Number(form.bathrooms), size: Number(form.size),
-        features: form.features, photoFiles: form.photoFiles,
-        contactName: form.contactName, contactPhone: form.contactPhone,
-        contactAlt: form.contactAlt, description: form.description,
-        available: form.available,
-      }, userId);
+        ...form
+      }, userId, (progress) => {
+        setUploadIdx(progress);
+      });
       setDone(true);
     } catch (e) {
       setError("❌ সাবমিট ব্যর্থ: " + e.message);
-    } finally { setLoading(false); }
+    } finally { 
+      setLoading(false); 
+    }
   };
 
   if (done) return (
@@ -427,7 +436,11 @@ export default function AddListingScreen({ onBack, userId }) {
                   : "bg-gradient-to-r from-accent to-orange-500 text-white shadow-accent/30"
               }`}
             >
-              {loading ? "সাবমিট হচ্ছে..." : "✅ বাসা সাবমিট করুন"}
+              {loading 
+                ? (form.photoFiles.length > 0 && uploadIdx < form.photoFiles.length)
+                  ? `📤 আপলোড হচ্ছে: ${uploadIdx + 1}/${form.photoFiles.length}` 
+                  : "⏳ সাবমিট হচ্ছে..." 
+                : "✅ বাসা সাবমিট করুন"}
             </button>
           )}
         </div>

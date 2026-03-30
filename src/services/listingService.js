@@ -13,17 +13,46 @@ const uploadPhoto = async (file, listingId) => {
   return getDownloadURL(r);
 };
 
-export const addListing = async (formData, userId) => {
+export const addListing = async (formData, userId, onProgress) => {
+  // 1. Create the listing document first (without photos)
   const docRef = await addDoc(collection(db, "listings"), {
-    ...formData, photos: [],
-    addedBy: userId, approved: false,
+    title: formData.title,
+    area: formData.area,
+    address: formData.address || "",
+    floor: formData.floor || "",
+    rent: Number(formData.rent),
+    type: formData.type,
+    rooms: Number(formData.rooms),
+    bathrooms: Number(formData.bathrooms || 0),
+    size: Number(formData.size || 0),
+    features: formData.features || [],
+    description: formData.description || "",
+    available: formData.available ?? true,
+    photos: [], // Initial empty array
+    addedBy: userId,
+    approved: false,
     createdAt: serverTimestamp(),
   });
+
+  // 2. Upload photos to Storage
   const urls = [];
-  for (const f of formData.photoFiles || []) {
-    urls.push(await uploadPhoto(f, docRef.id));
+  const files = formData.photoFiles || [];
+  
+  for (let i = 0; i < files.length; i++) {
+    try {
+      const url = await uploadPhoto(files[i], docRef.id);
+      urls.push(url);
+      if (onProgress) onProgress(i + 1); // Report that image i+1 is done
+    } catch (error) {
+      console.error("Image upload failed for:", files[i].name, error);
+    }
   }
-  if (urls.length) await updateDoc(docRef, { photos: urls });
+
+  // 3. Update the document with final photo URLs
+  if (urls.length > 0) {
+    await updateDoc(docRef, { photos: urls });
+  }
+
   return docRef.id;
 };
 
