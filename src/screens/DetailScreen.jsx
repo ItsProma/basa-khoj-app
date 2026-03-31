@@ -5,12 +5,9 @@ import { ShareSheet } from "../components/ShareSheet";
 export default function DetailScreen({ listingId, onBack }) {
   const [listing, setListing] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState("info");
   const [saved, setSaved] = useState(false);
   const [showShare, setShowShare] = useState(false);
-  const [showAllFeatures, setShowAllFeatures] = useState(false);
   const [activePhoto, setActivePhoto] = useState(0);
-  const [reported, setReported] = useState(false);
 
   useEffect(() => {
     getListing(listingId)
@@ -19,272 +16,183 @@ export default function DetailScreen({ listingId, onBack }) {
   }, [listingId]);
 
   if (loading) return (
-    <div className="flex flex-col items-center justify-center min-h-screen gap-4 animate-pulse">
-      <div className="w-20 h-20 bg-gray-200 rounded-full"></div>
-      <p className="text-primary font-bold text-lg">লোড হচ্ছে...</p>
+    <div className="flex flex-col items-center justify-center min-h-screen gap-4 animate-pulse bg-white">
+      <div className="w-16 h-16 bg-gray-100 rounded-full"></div>
+      <p className="text-gray-400 font-bold text-sm">লোড হচ্ছে...</p>
     </div>
   );
 
   if (!listing) return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-10 text-center">
-      <div className="text-6xl mb-6">🏚️</div>
-      <p className="text-xl font-bold text-gray-800 mb-6">দুঃখিত, বাসাটি পাওয়া যায়নি।</p>
+    <div className="flex flex-col items-center justify-center min-h-screen p-10 text-center bg-white">
+      <div className="text-5xl mb-6 grayscale opacity-40">🏚️</div>
+      <p className="text-xl font-black text-gray-800 mb-6">দুঃখিত, বাসাটি পাওয়া যায়নি।</p>
       <button 
         onClick={onBack}
-        className="px-8 py-3 bg-primary text-white font-bold rounded-2xl shadow-lg hover:scale-105 transition-transform"
+        className="px-6 py-3 bg-gray-900 text-white font-bold rounded-xl shadow-md hover:bg-gray-800 transition-colors"
       >
         ← ফিরে যান
       </button>
     </div>
   );
 
-  const photos = listing.photos?.length ? listing.photos : ["🏠", "🛋️", "🍳", "🛁"];
+  const photos = listing.photos?.length ? listing.photos : [];
   const features = listing.features || [];
-  const visFeatures = showAllFeatures ? features : features.slice(0, 4);
 
   return (
-    <div className="min-h-screen bg-gray-50 font-bengali pb-32">
-      {/* Gallery Section */}
-      <div className="relative group">
-        <div className="h-[300px] md:h-[400px] bg-gradient-to-br from-green-50 to-green-100 flex items-center justify-center overflow-hidden relative">
-          {typeof photos[activePhoto] === "string" && photos[activePhoto].startsWith("http")
-            ? <img src={photos[activePhoto]} alt={listing.title} className="w-full h-full object-cover transition-transform duration-700 hover:scale-110" />
-            : <span className="text-9xl drop-shadow-2xl">🏠</span>}
-          
-          {/* Top Bar Actions */}
-          <div className="absolute top-0 left-0 right-0 p-6 flex justify-between items-center z-10">
+    <div className="bg-white min-h-screen font-bengali pb-32">
+      {/* Hero Gallery Block */}
+      <div className="relative w-full aspect-[4/3] md:aspect-video bg-gray-100 overflow-hidden">
+        {/* Top Navbar Actions Overlay */}
+        <div className="absolute top-0 left-0 right-0 p-6 flex justify-between items-center z-10 bg-gradient-to-b from-black/20 to-transparent">
+          <button 
+            onClick={onBack}
+            className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-gray-800 text-xl shadow-[0_2px_8px_rgba(0,0,0,0.15)] hover:scale-105 transition-transform"
+          >
+            ←
+          </button>
+          <div className="flex gap-3">
             <button 
-              onClick={onBack}
-              className="w-11 h-11 rounded-2xl bg-white/90 backdrop-blur-md flex items-center justify-center text-primary text-xl shadow-lg active:scale-90 transition-all border border-white"
+              onClick={() => setShowShare(true)}
+              className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-gray-800 text-lg shadow-[0_2px_8px_rgba(0,0,0,0.15)] hover:scale-105 transition-transform"
             >
-              ←
+              <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="presentation" focusable="false" style={{display: 'block', fill: 'none', height: '16px', width: '16px', stroke: 'currentcolor', strokeWidth: '2', overflow: 'visible'}}><g fill="none"><path d="M27 18v9a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-9"></path><path d="M16 3v23V3z"></path><path d="M6 13l9.293-9.293a1 1 0 0 1 1.414 0L26 13"></path></g></svg>
             </button>
-            <div className="flex gap-3">
-              <button 
-                onClick={() => setSaved(!saved)}
-                className="w-11 h-11 rounded-2xl bg-white/90 backdrop-blur-md flex items-center justify-center text-xl shadow-lg active:scale-90 transition-all border border-white"
-              >
-                {saved ? "❤️" : "🤍"}
-              </button>
-              <button 
-                onClick={() => setShowShare(true)}
-                className="w-11 h-11 rounded-2xl bg-white/90 backdrop-blur-md flex items-center justify-center text-xl shadow-lg active:scale-90 transition-all border border-white"
-              >
-                ↗️
-              </button>
-            </div>
-          </div>
-
-          <div className="absolute bottom-6 right-6 bg-black/60 backdrop-blur-sm text-white text-[10px] font-black px-3 py-1.5 rounded-full tracking-widest uppercase">
-            {activePhoto + 1} / {photos.length} ফটোজ
-          </div>
-          <div className={`absolute bottom-6 left-6 px-4 py-1.5 rounded-full text-xs font-black text-white shadow-lg ${listing.available ? "bg-primary" : "bg-red-500"}`}>
-            {listing.available ? "✅ খালি আছে" : "❌ বুকড"}
+            <button 
+              onClick={() => setSaved(!saved)}
+              className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-gray-800 shadow-[0_2px_8px_rgba(0,0,0,0.15)] hover:scale-105 transition-transform"
+            >
+              <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="presentation" focusable="false" style={{display: 'block', fill: saved ? '#e31c5f' : 'rgba(0, 0, 0, 0.5)', height: '16px', width: '16px', stroke: saved ? '#e31c5f' : 'currentcolor', strokeWidth: '2', overflow: 'visible'}}><path d="m16 28c7-4.733 14-10 14-17 0-1.792-.683-3.583-2.05-4.95-1.367-1.366-3.158-2.05-4.95-2.05-1.791 0-3.583.684-4.949 2.05l-2.051 2.051-2.05-2.051c-1.367-1.366-3.158-2.05-4.95-2.05-1.791 0-3.583.684-4.949 2.05-1.367 1.367-2.051 3.158-2.051 4.95 0 7 7 12.267 14 17z"></path></svg>
+            </button>
           </div>
         </div>
 
-        {/* Thumbnails */}
-        <div className="flex gap-4 p-5 bg-white border-b border-gray-100 overflow-x-auto scrollbar-hide">
-          {photos.map((p, i) => (
-            <button 
-              key={i} 
-              onClick={() => setActivePhoto(i)}
-              className={`w-16 h-16 rounded-2xl flex-shrink-0 transition-all duration-300 overflow-hidden ${
-                activePhoto === i 
-                  ? "ring-4 ring-primary ring-offset-2 scale-95" 
-                  : "grayscale opacity-60 hover:grayscale-0 hover:opacity-100"
-              }`}
-            >
-              {typeof p === "string" && p.startsWith("http") 
-                ? <img src={p} alt="" className="w-full h-full object-cover" />
-                : <div className="w-full h-full bg-green-50 flex items-center justify-center text-2xl">🏠</div>}
-            </button>
-          ))}
+        {/* Main Photo */}
+        {photos.length > 0 && typeof photos[activePhoto] === 'string' && photos[activePhoto].startsWith('http') ? (
+          <img src={photos[activePhoto]} alt={listing.title} className="w-full h-full object-cover transition-opacity duration-500" />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-8xl grayscale opacity-20 bg-gray-100">🏠</div>
+        )}
+        
+        {/* Photo Indicators (if more than 1) */}
+        {photos.length > 1 && (
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full flex gap-2">
+             {photos.map((_, i) => (
+               <button 
+                 key={i} 
+                 onClick={() => setActivePhoto(i)}
+                 className={`h-1.5 rounded-full transition-all ${activePhoto === i ? 'w-4 bg-white' : 'w-1.5 bg-white/50'}`} 
+               />
+             ))}
+          </div>
+        )}
+      </div>
+
+      {/* Title & Key details */}
+      <div className="px-6 py-6 border-b border-gray-100">
+        <h1 className="text-2xl font-bold text-gray-900 leading-tight mb-1">{listing.title}</h1>
+        <p className="text-[15px] text-gray-800 font-medium">{listing.area}, সিলেট {listing.floor ? `· ${listing.floor} তলা` : ""}</p>
+        
+        <div className="flex gap-4 mt-3 text-[14px] text-gray-900">
+          <span>{listing.rooms || "0"} বেডরুম</span>
+          <span>·</span>
+          <span>{listing.bathrooms || "0"} বাথ</span>
+          <span>·</span>
+          <span>{listing.size || "0"} sqft</span>
+        </div>
+
+        <div className="flex gap-2 mt-4 items-center">
+          <span className="text-[14px] font-bold text-gray-900 border border-gray-200 px-3 py-1 rounded-lg">★ নতুন লিস্টিং</span>
+          <span className={`text-[12px] font-bold px-3 py-1.5 rounded-lg ${listing.available ? "bg-gray-100 text-gray-800" : "bg-red-50 text-red-600"}`}>
+            {listing.available ? "এখনই খালি আছে" : "বুকড"}
+          </span>
         </div>
       </div>
 
-      <div className="px-6 space-y-8 mt-6">
-        {/* Title & Price Header */}
-        <div className="flex justify-between items-start">
-          <div className="flex-1 pr-6">
-            <h1 className="text-2xl font-black text-gray-800 leading-tight mb-2">{listing.title}</h1>
-            <p className="text-gray-400 text-sm font-bold flex items-center gap-1.5">
-              <span className="text-accent">📍</span> {listing.area}{listing.floor ? ` • ${listing.floor} তলা` : ""}
-            </p>
-          </div>
-          <div className="text-right">
-            <div className="flex flex-col items-end">
-              <span className="text-3xl font-black text-primary leading-none tracking-tighter">৳{listing.rent?.toLocaleString()}</span>
-              <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">প্রতি মাস</span>
-            </div>
-          </div>
+      {/* Host Section */}
+      <div className="px-6 py-6 border-b border-gray-100 flex items-center gap-4">
+        <div className="w-14 h-14 rounded-full bg-gray-900 flex items-center justify-center text-white font-bold text-xl flex-shrink-0">
+          {(listing.contactName || "?")[0].toUpperCase()}
         </div>
-
-        {/* Quick Stats Grid */}
-        <div className="grid grid-cols-4 gap-3">
-          {[
-            ["🛏️", `${listing.rooms || "0"} রুম`],
-            ["🚿", `${listing.bathrooms || "0"} বাথ`],
-            ["📐", `${listing.size || "0"} sqft`],
-            ["🏠", listing.type === "family" ? "ফ্যামিলি" : listing.type || "অন্যান্য"]
-          ].map(([icon, val]) => (
-            <div key={val} className="bg-white p-3 rounded-2xl border border-gray-100 shadow-sm flex flex-col items-center gap-2 text-center group hover:bg-primary transition-colors duration-300">
-              <span className="text-2xl group-hover:scale-110 transition-transform">{icon}</span>
-              <span className="text-[10px] font-black text-gray-700 group-hover:text-white uppercase tracking-tighter">{val}</span>
-            </div>
-          ))}
-        </div>
-
-        {/* Content Tabs */}
-        <div className="bg-white p-1.5 rounded-2xl flex border border-gray-100 shadow-sm">
-          {[["info", "📋 বিবরণ"], ["map", "🗺️ অবস্থান"]].map(([v, l]) => (
-            <button 
-              key={v}
-              onClick={() => setTab(v)}
-              className={`flex-1 py-3 text-sm font-black rounded-xl transition-all duration-300 ${
-                tab === v ? "bg-primary text-white shadow-lg" : "text-gray-400 hover:text-gray-600"
-              }`}
-            >
-              {l}
-            </button>
-          ))}
-        </div>
-
-        {/* Tab Content: Info */}
-        <div className={`space-y-6 transition-all duration-300 ${tab === "info" ? "opacity-100 block" : "opacity-0 hidden"}`}>
-          {listing.description && (
-            <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
-              <h3 className="text-lg font-black text-gray-800 mb-4 border-l-4 border-accent pl-4">বাসার বিবরণ</h3>
-              <p className="text-gray-600 text-sm leading-relaxed whitespace-pre-wrap">{listing.description}</p>
-            </div>
-          )}
-
-          {features.length > 0 && (
-            <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
-              <h3 className="text-lg font-black text-gray-800 mb-4 border-l-4 border-accent pl-4">সুযোগ-সুবিধা</h3>
-              <div className="grid grid-cols-2 gap-3">
-                {visFeatures.map(f => (
-                  <div key={f} className="flex items-center gap-3 bg-gray-50 px-4 py-2.5 rounded-xl group hover:bg-primary/5 transition-colors">
-                    <span className="text-primary font-black text-xs">✓</span>
-                    <span className="text-xs font-bold text-gray-600 group-hover:text-primary transition-colors">{f}</span>
-                  </div>
-                ))}
-              </div>
-              {features.length > 4 && (
-                <button 
-                  onClick={() => setShowAllFeatures(!showAllFeatures)}
-                  className="mt-6 w-full text-center text-[10px] font-black text-primary uppercase tracking-widest hover:underline underline-offset-4"
-                >
-                  {showAllFeatures ? "↑ কম দেখুন" : `↓ আরও ${features.length - 4}টি সুবিধা দেখুন`}
-                </button>
-              )}
-            </div>
-          )}
-
-          <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
-            <h3 className="text-lg font-black text-gray-800 mb-4 border-l-4 border-accent pl-4">সঠিক ঠিকানা</h3>
-            <p className="text-gray-600 text-sm font-medium mb-6">📍 {listing.address || listing.area + ", সিলেট"}</p>
-            <button 
-              onClick={() => setTab("map")}
-              className="w-full py-4 bg-primary/5 text-primary text-xs font-black rounded-2xl hover:bg-primary/10 transition-colors uppercase tracking-widest"
-            >
-              🗺️ ম্যাপে অবস্থান দেখুন
-            </button>
-          </div>
-
-          {!reported ? (
-            <button 
-              onClick={() => setReported(true)}
-              className="w-full py-4 text-center text-xs font-bold text-red-400 hover:text-red-600 transition-colors"
-            >
-              🚩 এই তথ্য নিয়ে অভিযোগ করুন
-            </button>
-          ) : (
-            <p className="text-center text-xs font-black text-primary bg-primary/5 py-4 rounded-2xl animate-bounce">
-              ✅ অভিযোগ গ্রহণ করা হয়েছে। ধন্যবাদ।
-            </p>
-          )}
-        </div>
-
-        {/* Tab Content: Map */}
-        <div className={`space-y-6 transition-all duration-300 ${tab === "map" ? "opacity-100 block" : "opacity-0 hidden"}`}>
-          <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
-            <h3 className="text-lg font-black text-gray-800 mb-2">{listing.area}, সিলেট</h3>
-            <p className="text-xs font-bold text-gray-400 mb-4 tracking-tighter uppercase">{listing.address || "সঠিক ঠিকানা সংরক্ষিত"}</p>
-            
-            <div className="h-[250px] w-full rounded-2xl overflow-hidden shadow-inner mb-6 ring-1 ring-black/5">
-              <iframe
-                title="Google Maps"
-                width="100%"
-                height="100%"
-                className="grayscale-[20%] contrast-[110%]"
-                loading="lazy"
-                src={`https://maps.google.com/maps?q=${listing.lat || 24.8949},${listing.lng || 91.8687}&z=16&output=embed`}
-              />
-            </div>
-
-            <a 
-              href={`https://www.google.com/maps?q=${listing.lat || 24.8949},${listing.lng || 91.8687}`} 
-              target="_blank" 
-              rel="noreferrer"
-              className="flex items-center justify-center gap-3 py-4 bg-primary text-white text-sm font-black rounded-2xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
-            >
-              📍 Google Maps-এ খুলুন
-            </a>
-
-            <div className="mt-10">
-              <h4 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em] mb-6 text-center">আশেপাশের সুবিধাসমূহ</h4>
-              <div className="grid grid-cols-4 gap-2">
-                {[
-                  ["🏥", "হাসপাতাল", "৫ মি"],
-                  ["🏫", "স্কুল", "৩ মি"],
-                  ["🛒", "বাজার", "২ মি"],
-                  ["🕌", "মসজিদ", "১ মি"]
-                ].map(([ic, lb, dt]) => (
-                  <div key={lb} className="flex flex-col items-center gap-2 p-2 rounded-xl border border-gray-50 text-center">
-                    <span className="text-xl">{ic}</span>
-                    <p className="text-[9px] font-black text-gray-700 uppercase leading-none">{lb}</p>
-                    <p className="text-[8px] font-bold text-gray-300">{dt} পথ</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+        <div>
+          <h3 className="text-[16px] font-bold text-gray-900">মালিকপক্ষ: {listing.contactName || "অজানা"}</h3>
+          <p className="text-sm text-gray-500">{listing.type === 'family' ? 'ফ্যামিলি' : 'ব্যাচেলর/অন্যান্য'} হোস্ট</p>
         </div>
       </div>
 
-      {/* Persistent Contact Bar */}
-      <div className="fixed bottom-0 left-0 right-0 p-6 z-50 pointer-events-none">
-        <div className="max-w-[480px] mx-auto bg-white/80 backdrop-blur-xl rounded-[32px] p-4 shadow-2xl border border-white/40 flex items-center justify-between gap-4 pointer-events-auto ring-1 ring-black/5">
-          <div className="flex items-center gap-3 pl-2">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center text-white font-black text-xl shadow-lg ring-4 ring-white">
-              {(listing.contactName || "?")[0].toUpperCase()}
-            </div>
-            <div className="hidden sm:block">
-              <p className="text-xs font-black text-gray-800 leading-tight">{listing.contactName || "বাসা মালিক"}</p>
-              <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">মালিকপক্ষ</p>
-            </div>
+      {/* Description */}
+      {listing.description && (
+        <div className="px-6 py-6 border-b border-gray-100">
+          <h3 className="text-lg font-bold text-gray-900 mb-3">বাসা সম্পর্কে</h3>
+          <p className="text-[15px] text-gray-800 leading-relaxed whitespace-pre-wrap">{listing.description}</p>
+        </div>
+      )}
+
+      {/* Features/Amenities */}
+      {features.length > 0 && (
+        <div className="px-6 py-6 border-b border-gray-100">
+          <h3 className="text-lg font-bold text-gray-900 mb-4">কী কী সুবিধা পাচ্ছেন</h3>
+          <div className="grid grid-cols-2 gap-y-4 gap-x-6">
+            {features.map(f => (
+              <div key={f} className="flex items-center gap-4">
+                <span className="text-2xl text-gray-700">✓</span>
+                <span className="text-[15px] text-gray-800">{f}</span>
+              </div>
+            ))}
           </div>
-          <div className="flex gap-2 flex-1 sm:flex-none">
-            <a 
-              href={`tel:${listing.contactPhone}`} 
-              className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3.5 bg-primary text-white text-xs font-black rounded-2xl shadow-lg shadow-primary/20 hover:scale-105 transition-transform"
-            >
-              📞 কল
-            </a>
+        </div>
+      )}
+
+      {/* Map/Location Section */}
+      <div className="px-6 py-6 border-b border-gray-100 pb-12">
+        <h3 className="text-lg font-bold text-gray-900 mb-2">কোথায় থাকবেন</h3>
+        <p className="text-[15px] text-gray-800 mb-4">{listing.address || listing.area + ", সিলেট"}</p>
+        
+        <div className="w-full aspect-video bg-gray-100 rounded-xl overflow-hidden ring-1 ring-gray-200">
+          <iframe
+            title="Google Maps"
+            width="100%"
+            height="100%"
+            className="border-0 grayscale-[20%]"
+            loading="lazy"
+            src={`https://maps.google.com/maps?q=${listing.lat || 24.8949},${listing.lng || 91.8687}&z=16&output=embed`}
+          />
+        </div>
+        <a 
+          href={`https://www.google.com/maps?q=${listing.lat || 24.8949},${listing.lng || 91.8687}`} 
+          target="_blank" 
+          rel="noreferrer"
+          className="inline-block mt-4 text-[15px] font-bold text-gray-900 underline"
+        >
+          Google Maps-এ বড় করে দেখুন
+        </a>
+      </div>
+
+      {/* Persistent Bottom Contact Bar */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 py-3 px-6 shadow-[0_-1px_15px_rgba(0,0,0,0.05)] pb-safe">
+        <div className="max-w-[480px] mx-auto flex items-center justify-between gap-4">
+          <div className="flex flex-col">
+            <span className="text-[15px] font-bold text-gray-900">৳{listing.rent?.toLocaleString()} <span className="text-sm font-normal">/ মাস</span></span>
+            <span className="text-[13px] text-gray-500 underline cursor-pointer">বিস্তারিত দেখুন</span>
+          </div>
+          <div className="flex gap-2">
             <a 
               href={`https://wa.me/88${(listing.contactPhone || "").replace(/-/g, "")}`} 
               target="_blank" 
               rel="noreferrer" 
-              className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3.5 bg-[#25D366] text-white text-xs font-black rounded-2xl shadow-lg shadow-green-500/20 hover:scale-105 transition-transform"
+              className="px-4 py-3 bg-gray-100 text-gray-900 text-[15px] font-bold rounded-xl active:scale-95 transition-transform whitespace-nowrap"
             >
-              💬 হোয়াটঅ্যাপ
+              মেসেজ
+            </a>
+            <a 
+              href={`tel:${listing.contactPhone}`} 
+              className="px-6 py-3 bg-[#e31c5f] text-white text-[15px] font-bold rounded-xl shadow-md active:scale-95 transition-transform"
+            >
+              কল করুন
             </a>
           </div>
         </div>
       </div>
 
-      {/* Share Sheet */}
       {showShare && <ShareSheet listing={listing} onClose={() => setShowShare(false)} />}
     </div>
   );

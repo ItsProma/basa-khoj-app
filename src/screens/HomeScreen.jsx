@@ -1,17 +1,16 @@
 import { useState, useEffect, useMemo } from "react";
 import { getListings } from "../services/listingService";
-import { logoutUser } from "../services/authService";
 
 const AREAS = ["সব এলাকা", "জিন্দাবাজার", "আম্বরখানা", "শাহজালাল উপশহর", "সোবহানীঘাট", "টিলাগড়", "বন্দরবাজার", "মিরাবাজার", "কদমতলী"];
 const TYPES = [
-  { value: "all", label: "সব ধরন" },
-  { value: "family", label: "🏠 ফ্যামিলি" },
-  { value: "bachelor", label: "👨 ব্যাচেলর" },
-  { value: "sublet", label: "🛏️ সাবলেট" },
-  { value: "commercial", label: "🏬 কমার্শিয়াল" },
+  { value: "all", label: "সব ধরন", icon: "🏢" },
+  { value: "family", label: "ফ্যামিলি", icon: "🏠" },
+  { value: "bachelor", label: "ব্যাচেলর", icon: "👨" },
+  { value: "sublet", label: "সাবলেট", icon: "🛏️" },
+  { value: "commercial", label: "কমার্শিয়াল", icon: "🏬" },
 ];
 
-export default function HomeScreen({ user, onSelectListing, onAddListing }) {
+export default function HomeScreen({ user, onSelectListing }) {
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showFilter, setShowFilter] = useState(false);
@@ -49,8 +48,6 @@ export default function HomeScreen({ user, onSelectListing, onAddListing }) {
     });
   }, [listings, filters]);
 
-  const firstName = user?.displayName?.split(" ")[0] || "আপনাকে";
-
   const clearFilters = () => {
     setFilters({
       search: "",
@@ -59,72 +56,68 @@ export default function HomeScreen({ user, onSelectListing, onAddListing }) {
       maxRent: 25000,
       onlyAvail: false
     });
+    setShowFilter(false);
   };
 
   const isFilterActive = filters.area !== "সব এলাকা" || filters.type !== "all" || filters.onlyAvail || filters.maxRent < 25000;
 
   return (
-    <div className="min-h-screen bg-gray-50 font-bengali pb-24">
-      {/* Header Section */}
-      <header className="bg-gradient-to-br from-primary-dark to-primary px-6 pt-8 pb-10 rounded-b-[40px] shadow-lg sticky top-0 z-30">
-        <div className="flex justify-between items-start mb-6">
-          <div>
-            <p className="text-white/70 text-xs font-bold uppercase tracking-wider mb-1">স্বাগতম, {firstName}! 👋</p>
-            <h1 className="text-white text-2xl font-black">বাসা খুঁজুন</h1>
-          </div>
-          <button 
-            onClick={logoutUser}
-            className="w-11 h-11 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white font-black text-lg hover:bg-white/20"
-          >
-            {(user?.displayName?.[0] || user?.email?.[0] || "?").toUpperCase()}
-          </button>
-        </div>
-
-        {/* Search Bar */}
-        <div className="flex gap-3">
-          <div className="flex-1 bg-white rounded-2xl shadow-inner flex items-center px-4 py-1.5 focus-within:ring-2 ring-accent/50 transition-all">
-            <span className="text-gray-400 mr-2 text-lg">🔍</span>
+    <div className="bg-white font-bengali pb-24 min-h-screen">
+      {/* Clean Sticky Header */}
+      <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-xl border-b border-gray-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] pt-6 pb-4 px-6">
+        
+        {/* Search Bar - Airbnb Style */}
+        <div className="flex bg-white border border-gray-200 shadow-[0_4px_12px_rgba(0,0,0,0.05)] rounded-full px-4 py-2 flex-1 items-center gap-3 transition-shadow hover:shadow-md cursor-pointer">
+          <span className="text-gray-800 text-lg">🔍</span>
+          <div className="flex-1 flex flex-col justify-center">
+            <span className="text-[10px] font-black text-gray-800 leading-none mb-0.5">কোথায় খুঁজছেন?</span>
             <input 
-              className="flex-1 bg-transparent border-none outline-none py-2 text-sm font-medium text-gray-700" 
-              placeholder="এলাকা বা বাসার নাম..." 
+              className="bg-transparent border-none outline-none text-xs text-gray-500 placeholder-gray-400 w-full p-0 h-4" 
+              placeholder="এলাকার নাম লিখুন..." 
               value={filters.search} 
               onChange={e => setFilters(prev => ({...prev, search: e.target.value}))} 
             />
-            {filters.search && (
-              <button 
-                onClick={() => setFilters(prev => ({...prev, search: ""}))}
-                className="text-gray-300 hover:text-gray-500 text-lg ml-2"
-              >
-                ✕
-              </button>
-            )}
           </div>
           <button 
             onClick={() => setShowFilter(!showFilter)}
-            className={`w-12 h-12 flex items-center justify-center rounded-2xl transition-all ${
-              showFilter ? "bg-accent shadow-lg scale-105" : "bg-white/15 backdrop-blur-md border border-white/20"
-            }`}
+            className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-600 transition-colors hover:bg-gray-50 bg-white"
           >
-            <span className={`text-xl transition-transform duration-300 ${showFilter ? 'rotate-180' : ''}`}>
-              {showFilter ? '✕' : '⚙️'}
-            </span>
+            <span className="text-sm">⚙️</span>
           </button>
         </div>
 
+        {/* Categories / Types Horizontal List */}
+        <div className="flex gap-4 overflow-x-auto scrollbar-hide mt-5 pb-2 -mx-2 px-2">
+          {TYPES.map(t => (
+            <button 
+              key={t.value} 
+              onClick={() => setFilters(prev => ({...prev, type: t.value}))}
+              className={`flex flex-col items-center gap-2 min-w-[56px] pb-2 border-b-2 transition-colors ${
+                filters.type === t.value 
+                  ? "border-gray-800 text-gray-800 opacity-100" 
+                  : "border-transparent text-gray-500 opacity-60 hover:opacity-100"
+              }`}
+            >
+              <span className="text-2xl">{t.icon}</span>
+              <span className="text-[10px] font-bold whitespace-nowrap">{t.label}</span>
+            </button>
+          ))}
+        </div>
+
         {/* Expandable Filter Panel */}
-        <div className={`overflow-hidden transition-all duration-500 ease-in-out ${showFilter ? 'max-h-[500px] mt-6 opacity-100' : 'max-h-0 opacity-0'}`}>
-          <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-5 border border-white/10 space-y-5">
+        <div className={`overflow-hidden transition-all duration-300 ease-in-out ${showFilter ? 'max-h-[500px] mt-4 opacity-100' : 'max-h-0 opacity-0'}`}>
+          <div className="bg-gray-50 rounded-2xl p-5 border border-gray-100 space-y-5">
             <div>
-              <p className="text-white/90 text-xs font-bold uppercase tracking-widest mb-3 ml-1">📍 এলাকা</p>
+              <p className="text-gray-800 text-xs font-bold uppercase tracking-widest mb-3">📍 এলাকা নির্বাচন করুন</p>
               <div className="flex flex-wrap gap-2">
                 {AREAS.map(a => (
                   <button 
                     key={a} 
                     onClick={() => setFilters(prev => ({...prev, area: a}))}
-                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                    className={`px-4 py-2 rounded-full text-xs font-bold transition-all border ${
                       filters.area === a 
-                        ? "bg-accent text-white shadow-md shadow-accent/20" 
-                        : "bg-white/10 text-white/80 border border-white/10 hover:bg-white/20"
+                        ? "bg-gray-800 border-gray-800 text-white shadow-md shadow-gray-200" 
+                        : "bg-white border-gray-200 text-gray-600 hover:border-gray-400"
                     }`}
                   >
                     {a}
@@ -133,144 +126,130 @@ export default function HomeScreen({ user, onSelectListing, onAddListing }) {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-white/90 text-xs font-bold uppercase tracking-widest mb-3 ml-1">🏠 ধরন</p>
-                <select 
-                  className="w-full bg-white/15 border border-white/10 rounded-xl px-3 py-2 text-xs font-bold text-white outline-none appearance-none cursor-pointer"
-                  value={filters.type}
-                  onChange={e => setFilters(prev => ({...prev, type: e.target.value}))}
-                >
-                  {TYPES.map(t => <option key={t.value} value={t.value} className="text-gray-800 font-bold">{t.label}</option>)}
-                </select>
-              </div>
-              <div>
-                <p className="text-white/90 text-xs font-bold uppercase tracking-widest mb-3 ml-1">💰 ভাড়া (৳)</p>
-                <div className="flex items-center gap-2">
-                  <input 
-                    type="range" min={1000} max={25000} step={500} 
-                    value={filters.maxRent} 
-                    onChange={e => setFilters(prev => ({...prev, maxRent: +e.target.value}))}
-                    className="flex-1 accent-accent h-1.5 rounded-lg appearance-none bg-white/20 cursor-pointer" 
-                  />
-                  <span className="text-white text-[10px] font-black w-14 text-right bg-white/10 px-2 py-1 rounded-md">
+            <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-200">
+              <div className="col-span-2">
+                <div className="flex justify-between items-center mb-2">
+                  <p className="text-gray-800 text-xs font-bold uppercase tracking-widest">💰 সর্বোচ্চ ভাড়া (৳)</p>
+                  <span className="text-gray-800 text-xs font-black bg-white border border-gray-200 px-3 py-1 rounded-full shadow-sm">
                     {filters.maxRent.toLocaleString()}
                   </span>
                 </div>
+                <input 
+                  type="range" min={1000} max={25000} step={500} 
+                  value={filters.maxRent} 
+                  onChange={e => setFilters(prev => ({...prev, maxRent: +e.target.value}))}
+                  className="w-full accent-gray-800 h-1.5 rounded-lg appearance-none bg-gray-200 cursor-pointer" 
+                />
               </div>
             </div>
 
-            <div className="flex items-center justify-between pt-2 border-t border-white/10">
-              <span className="text-white/90 text-xs font-bold">শুধু খালি বাসা</span>
+            <div className="flex items-center justify-between pt-4 border-t border-gray-200">
+              <span className="text-gray-800 text-xs font-bold uppercase tracking-widest">শুধু খালি বাসা দেখান</span>
               <button 
                 onClick={() => setFilters(prev => ({...prev, onlyAvail: !prev.onlyAvail}))}
-                className={`w-12 h-6 rounded-full relative transition-all duration-300 ${filters.onlyAvail ? 'bg-accent' : 'bg-white/20'}`}
+                className={`w-12 h-6 rounded-full relative transition-all duration-300 ${filters.onlyAvail ? 'bg-gray-800' : 'bg-gray-300'}`}
               >
                 <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all duration-300 ${filters.onlyAvail ? 'left-7 shadow-md' : 'left-1'}`} />
               </button>
             </div>
+            
+            <button 
+              onClick={clearFilters}
+              className="w-full mt-2 py-3 bg-white border border-gray-200 rounded-xl text-xs font-black text-gray-800 hover:bg-gray-100 transition-colors uppercase tracking-widest"
+            >
+              সব ফিল্টার বাতিল করুন ✕
+            </button>
           </div>
         </div>
       </header>
 
       {/* Content Section */}
-      <main className="px-6 mt-8">
-        <div className="flex justify-between items-center mb-6">
-          <p className="text-gray-500 text-sm font-bold">
-            <span className="text-primary font-black text-lg">{filtered.length}টি</span> বাসা পাওয়া গেছে
-          </p>
-          {isFilterActive && (
-            <button 
-              onClick={clearFilters}
-              className="text-[11px] font-black text-red-500 uppercase tracking-widest bg-red-50 px-3 py-1.5 rounded-full hover:bg-red-100 transition-colors"
-            >
-              ✕ তথ্য মুছুন
-            </button>
-          )}
-        </div>
-
-        {loading ? (
-          <div className="flex flex-col items-center py-20 animate-pulse">
-            <div className="w-16 h-16 bg-gray-200 rounded-full mb-4"></div>
-            <div className="h-4 w-32 bg-gray-200 rounded-full mb-2"></div>
-            <div className="h-3 w-48 bg-gray-100 rounded-full"></div>
-          </div>
-        ) : filtered.length === 0 ? (
-          <div className="text-center py-20 px-10">
-            <div className="text-7xl mb-6 grayscale opacity-40">🏚️</div>
-            <h3 className="text-xl font-black text-gray-800 mb-2">কোনো বাসা পাওয়া যায়নি</h3>
-            <p className="text-gray-400 text-sm font-medium">অনুগ্রহ করে ফিল্টার পরিবর্তন করে পুনরায় চেষ্টা করুন।</p>
-            <button 
-              onClick={clearFilters}
-              className="mt-6 px-6 py-3 bg-primary text-white font-bold rounded-2xl shadow-lg shadow-primary/20 hover:scale-105 transition-transform"
-            >
-              সবগুলো দেখুন
-            </button>
-          </div>
-        ) : (
-          <div className="grid gap-6">
-            {filtered.map(l => (
+      <main className="px-6 mt-6">
+        <div className="flex flex-col gap-8">
+          {loading ? (
+            // Skeleton Loaders
+            Array.from({length: 3}).map((_, i) => (
+              <div key={i} className="animate-pulse">
+                <div className="w-full aspect-square bg-gray-200 rounded-2xl mb-4"></div>
+                <div className="flex justify-between items-start mb-2">
+                  <div className="h-4 w-1/2 bg-gray-200 rounded-full"></div>
+                  <div className="h-4 w-16 bg-gray-200 rounded-full"></div>
+                </div>
+                <div className="h-3 w-1/3 bg-gray-200 rounded-full mb-1"></div>
+                <div className="h-4 w-24 bg-gray-200 rounded-full mt-2"></div>
+              </div>
+            ))
+          ) : filtered.length === 0 ? (
+            <div className="text-center py-20">
+              <div className="text-6xl mb-4 grayscale opacity-40">🏚️</div>
+              <h3 className="text-lg font-black text-gray-800 mb-2">কোনো বাসা পাওয়া যায়নি</h3>
+              <p className="text-gray-500 text-sm font-medium">অনুগ্রহ করে ফিল্টার পরিবর্তন করে পুনরায় চেষ্টা করুন।</p>
+              {isFilterActive && (
+                <button 
+                  onClick={clearFilters}
+                  className="mt-6 px-6 py-3 bg-gray-900 text-white font-bold rounded-xl hover:bg-gray-800 transition-colors"
+                >
+                  সবগুলো দেখুন
+                </button>
+              )}
+            </div>
+          ) : (
+            filtered.map(l => (
               <div 
                 key={l.id} 
                 onClick={() => onSelectListing(l.id)}
-                className="bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer border border-gray-100 group"
+                className="group cursor-pointer"
               >
-                <div className="flex">
-                  {/* Card Image Placeholder */}
-                  <div className="w-32 bg-gradient-to-br from-green-50 to-green-100 flex items-center justify-center relative flex-shrink-0 group-hover:scale-110 transition-transform duration-500">
-                    <span className="text-5xl drop-shadow-sm">{l.photos?.[0] ? "🏠" : "🏠"}</span>
-                    <div className={`absolute top-3 left-3 px-2 py-1 rounded-lg text-[9px] font-black text-white ${l.available ? "bg-primary" : "bg-red-500"}`}>
-                      {l.available ? "খালি" : "ভরা"}
+                {/* Airbnb-style Card Image */}
+                <div className="relative w-full aspect-[4/3] bg-gray-100 rounded-2xl overflow-hidden mb-3">
+                  {l.photos?.[0] ? (
+                    typeof l.photos[0] === 'string' && l.photos[0].startsWith('http') ? (
+                       <img src={l.photos[0]} alt={l.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-gray-100 group-hover:scale-105 transition-transform duration-500 text-6xl shadow-inner">
+                        🏠
+                      </div>
+                    )
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-gray-100 group-hover:scale-105 transition-transform duration-500 text-6xl shadow-inner">
+                      🏠
+                    </div>
+                  )}
+                  
+                  {/* Floating Like Button */}
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); /* Add handleSave logic */ }}
+                    className="absolute top-4 right-4 text-white hover:scale-110 transition-transform drop-shadow-md z-10"
+                  >
+                    <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="presentation" focusable="false" style={{display: 'block', fill: 'rgba(0, 0, 0, 0.5)', height: '24px', width: '24px', stroke: 'white', strokeWidth: '2', overflow: 'visible'}}><path d="m16 28c7-4.733 14-10 14-17 0-1.792-.683-3.583-2.05-4.95-1.367-1.366-3.158-2.05-4.95-2.05-1.791 0-3.583.684-4.949 2.05l-2.051 2.051-2.05-2.051c-1.367-1.366-3.158-2.05-4.95-2.05-1.791 0-3.583.684-4.949 2.05-1.367 1.367-2.051 3.158-2.051 4.95 0 7 7 12.267 14 17z"></path></svg>
+                  </button>
+
+                  <div className={`absolute top-4 left-4 px-2 py-1 rounded-md text-[10px] font-black tracking-widest uppercase shadow-md ${l.available ? "bg-white text-gray-900" : "bg-red-500 text-white"}`}>
+                    {l.available ? "খালি" : "বুকড"}
+                  </div>
+                </div>
+                
+                {/* Information */}
+                <div className="flex justify-between items-start pt-1">
+                  <div>
+                    <h3 className="text-[15px] font-bold text-gray-900 leading-snug tracking-tight">{l.area}, সিলেট</h3>
+                    <p className="text-[15px] text-gray-500 leading-snug">{l.title}</p>
+                    {l.rooms && <p className="text-[15px] text-gray-500 leading-snug">{l.rooms} বেডরুম</p>}
+                    <div className="flex items-center gap-1 mt-1">
+                      <span className="text-[15px] font-bold text-gray-900 leading-snug tracking-tight">৳{l.rent?.toLocaleString()}</span>
+                      <span className="text-[15px] text-gray-900 leading-snug">/ মাস</span>
                     </div>
                   </div>
-                  
-                  {/* Card Body */}
-                  <div className="p-5 flex-1 relative">
-                    <h3 className="text-base font-black text-gray-800 line-clamp-1 mb-1 pr-4">{l.title}</h3>
-                    <p className="text-gray-400 text-[11px] font-bold flex items-center gap-1 mb-3 uppercase tracking-tighter">
-                      <span className="text-accent text-sm">📍</span> {l.area}{l.floor ? ` • ${l.floor} তলা` : ""}
-                    </p>
-                    
-                    <div className="flex items-baseline gap-1 mb-4">
-                      <span className="text-2xl font-black text-primary tracking-tight">৳{l.rent?.toLocaleString()}</span>
-                      <span className="text-[10px] font-bold text-gray-400 uppercase">/মাস</span>
-                    </div>
-
-                    <div className="flex flex-wrap gap-1.5">
-                      {(l.features || []).slice(0, 2).map(f => (
-                        <span key={f} className="text-[10px] font-bold px-2.5 py-1 bg-gray-50 text-gray-500 rounded-lg group-hover:bg-primary/5 group-hover:text-primary transition-colors">
-                          {f}
-                        </span>
-                      ))}
-                      {(l.features || []).length > 2 && (
-                        <span className="text-[10px] font-bold px-2.5 py-1 text-gray-300 bg-gray-50 rounded-lg">
-                          +{(l.features.length - 2)}
-                        </span>
-                      )}
-                    </div>
-                    
-                    {/* Arrow Indicator */}
-                    <div className="absolute top-1/2 -translate-y-1/2 right-4 text-gray-200 group-hover:text-primary transition-colors">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" />
-                      </svg>
-                    </div>
+                  <div className="flex items-center gap-1 text-[14px]">
+                    <span className="text-gray-900">★</span>
+                    <span className="text-gray-900 font-medium">নতুন</span>
                   </div>
                 </div>
               </div>
-            ))}
-          </div>
-        )}
+            ))
+          )}
+        </div>
       </main>
-
-      {/* Floating Action Button */}
-      <button 
-        onClick={onAddListing}
-        className="fixed bottom-8 right-8 flex items-center gap-3 bg-gradient-to-r from-accent to-orange-500 text-white font-black px-6 py-4 rounded-3xl shadow-xl shadow-accent/30 hover:scale-105 active:scale-95 transition-all z-40 group"
-      >
-        <span className="text-2xl group-hover:rotate-12 transition-transform">+</span>
-        <span className="text-sm">বাসা যোগ করুন</span>
-      </button>
     </div>
   );
 }

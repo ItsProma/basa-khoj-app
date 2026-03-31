@@ -13,7 +13,7 @@
   font-family: 'Hind Siliguri', 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-  background-color: #f4f6f4;
+  background-color: #ffffff;
   color: #1a1a1a;
   -webkit-font-smoothing: antialiased;
 }
@@ -24,7 +24,7 @@ body {
   place-items: center;
   min-width: 320px;
   min-height: 100vh;
-  background-color: #f4f6f4;
+  background-color: #ffffff;
 }
 
 #root {
@@ -32,7 +32,7 @@ body {
   margin: 0 auto;
   width: 100%;
   min-height: 100vh;
-  background-color: #f4f6f4;
+  background-color: #ffffff;
   position: relative;
   overflow-x: hidden;
 }
